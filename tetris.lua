@@ -14,17 +14,17 @@ function tetris_init()
     j={57,150,39,210}
 
     currpiece={
-        pieceid=4,
+        pieceid=1,
         rotation_ind=1,
         color=2,
         x=5,
-        y=10,
+        y=1,
         piecegrid={}
     }
     init_piece_grid(currpiece)
 
     boardsizex=10
-    boardsizey=19
+    boardsizey=20
     boardx=20
     boardy=3
     board={}
@@ -149,13 +149,14 @@ end
 function is_piece_colliding_grid(tetri)
     for row=1,#tetri.piecegrid do
         for col=1,#tetri.piecegrid[row] do
+            block = tetri.piecegrid[row][col]
             boardpx = tetri.x+col-1
             boardpy = tetri.y+row-1
-            if boardpx < 1 or boardpx>boardsizex then
-                stop(1)
+            if (boardpx < 1 or boardpx>boardsizex) and block != 0 then
+                stop(boardpx)
                 return true
             end
-            if tetri.piecegrid[row][col] != 0 and board[boardpy][boardpx] != 0 then
+            if block != 0 and board[boardpy][boardpx] != 0 then
                 stop(2)
                 return true 
             end
@@ -164,8 +165,25 @@ function is_piece_colliding_grid(tetri)
     return false
 end
 
-function attempt_rotate_tetrimino(dir)
-    rotate_tetrimino(dir, currpiece)
+function attempt_rotate_tetrimino(dir, tetri)
+    check_tetrimino = {}
+    check_tetrimino = deepcopy(tetri, {})
+    rotate_tetrimino(dir, check_tetrimino)
+    if not is_piece_colliding_grid(check_tetrimino) then
+        currpiece = check_tetrimino
+        return true
+    end
+    check_tetrimino.x -= 1
+    if not is_piece_colliding_grid(check_tetrimino) then
+        currpiece = check_tetrimino
+        return true
+    end
+    check_tetrimino.x += 2
+    if not is_piece_colliding_grid(check_tetrimino) then
+        currpiece = check_tetrimino
+        return true
+    end
+    return false
 end
 
 function rotate_tetrimino(dir, tetri)

@@ -27,8 +27,10 @@ function tetris_init()
     boardsizey=19
     boardx=20
     boardy=3
-    b={}
+    board={}
     fillboard()
+
+    das_frames = 0
 end
 
 function init_piece_grid(p)
@@ -70,45 +72,117 @@ end
 function fillboard()
     for i=0, boardsizey do
         local r={}
-        add(b,r)
+        add(board,r)
         for f=0, boardsizex do
             add(r,0)
         end
     end
 end
 
-function dtb(num)
-    local bin=""
-    for i=7,0,-1do
-      bin..=num\2^i %2
-    end
-    return bin
-  end
-
 function tetris_update60()
+    accept_game_inputs()
+end
+
+function accept_game_inputs()
+    if btnp(0) then
+        init_das()
+    end
+    if btn(0) then
+        continue_das()
+    end
+    if btnp(1) then
+        init_das()
+    end
+    if btn(1) then
+        continue_das()
+    end
+    if btn(0) == btn(1) then
+        kill_das(currpiece)
+    end
+
+    if btnp(2) then
+
+    end
+    if btnp(3) then
+
+    end
+    if btn(3) then
+
+    end
     if btnp(5) then
-        rotate_tetrimino(1)
+        attempt_rotate_tetrimino(1, currpiece)
     end
     if btnp(4) then
-        rotate_tetrimino(-1)
+        attempt_rotate_tetrimino(-1, currpiece)
     end
 end
 
-function rotate_tetrimino(dir)
+function init_das()
+    if btnp(0) != btnp(1) then
+        dasframes = 0
+        movedir = 0
+        if (btnp(1)) movedir += 1
+        if (btnp(0)) movedir -= 1
+        attempt_move_tetrimino(movedir, currpiece)
+    end
+end
+
+function continue_das()
+    if btnp(0) != btnp(1) then
+        das_frames += 1
+    end
+end
+
+function kill_das()
+    das_frames = -1
+end
+
+function attempt_move_tetrimino(dir, tetri)
+    check_tetrimino = {}
+    check_tetrimino = deepcopy(tetri, {})
+    check_tetrimino.x += dir
+    if not is_piece_colliding_grid(check_tetrimino) then
+        tetri.x += dir
+    end
+end
+
+function is_piece_colliding_grid(tetri)
+    for row=1,#tetri.piecegrid do
+        for col=1,#tetri.piecegrid[row] do
+            boardpx = tetri.x+col-1
+            boardpy = tetri.y+row-1
+            if boardpx < 1 or boardpx>boardsizex then
+                stop(1)
+                return true
+            end
+            if tetri.piecegrid[row][col] != 0 and board[boardpy][boardpx] != 0 then
+                stop(2)
+                return true 
+            end
+        end
+    end
+    return false
+end
+
+function attempt_rotate_tetrimino(dir)
+    rotate_tetrimino(dir, currpiece)
+end
+
+function rotate_tetrimino(dir, tetri)
     if dir==1 then
-        currpiece.rotation_ind += 1
-        if currpiece.rotation_ind > #pieces[currpiece.pieceid] then
-            currpiece.rotation_ind = 1
+        tetri.rotation_ind += 1
+        if tetri.rotation_ind > #pieces[tetri.pieceid] then
+            tetri.rotation_ind = 1
         end
         --stop(currpiece.rotation_ind)
     elseif dir==-1 then
-        currpiece.rotation_ind -= 1
-        if currpiece.rotation_ind < 1 then
-            currpiece.rotation_ind = #pieces[currpiece.pieceid]
+        tetri.rotation_ind -= 1
+        if tetri.rotation_ind < 1 then
+            tetri.rotation_ind = #pieces[tetri.pieceid]
         end
         --stop(currpiece.rotation_ind)
     end
-    init_piece_grid(currpiece)
+    init_piece_grid(tetri)
 end
 
 function draw_board_backing()

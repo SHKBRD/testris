@@ -104,10 +104,13 @@ function accept_game_inputs()
 
     end
     if btnp(3) then
-
+        
     end
     if btn(3) then
-
+        moveddown = attempt_move_tetrimino_down(currpiece)
+        if not moveddown then
+            lock_piece(currpiece)
+        end
     end
     if btnp(5) then
         attempt_rotate_tetrimino(1, currpiece)
@@ -146,6 +149,18 @@ function attempt_move_tetrimino(dir, tetri)
     end
 end
 
+function attempt_move_tetrimino_down(tetri)
+    check_tetrimino = {}
+    check_tetrimino = deepcopy(tetri, {})
+    check_tetrimino.y += 1
+    if not is_piece_colliding_grid(check_tetrimino) then
+        --stop(12)
+        tetri.y = check_tetrimino.y
+        return true
+    end
+    return false
+end
+
 function is_piece_colliding_grid(tetri)
     for row=1,#tetri.piecegrid do
         for col=1,#tetri.piecegrid[row] do
@@ -154,6 +169,10 @@ function is_piece_colliding_grid(tetri)
             boardpy = tetri.y+row-1
             if (boardpx < 1 or boardpx>boardsizex) and block != 0 then
                 stop(boardpx)
+                return true
+            end
+            if (boardpy < 1 or boardpx>boardsizex) and block != 0 then
+                stop(boardpy)
                 return true
             end
             if block != 0 and board[boardpy][boardpx] != 0 then
@@ -204,7 +223,7 @@ function rotate_tetrimino(dir, tetri)
 end
 
 function draw_board_backing()
-    rectfill(boardx, boardy, boardx+boardsizex*6, boardy+boardsizey*6, 3)
+    rectfill(boardx, boardy, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 3)
 end
 
 function draw_board_block(x, y, block_type)
@@ -224,8 +243,8 @@ function draw_tetrimino(x, y, p)
     for rowi=1, #p.piecegrid do
         --stop()
         for coli=1, #p.piecegrid[rowi] do
-            bx=x+coli*6
-            by=y+rowi*6
+            bx=x+(coli-2)*6
+            by=y+(rowi-2)*6
             result=p.piecegrid[rowi][coli]
             if result != 0 then
                 draw_board_block(bx,by,p.color)

@@ -1,4 +1,7 @@
 function tetris_init()
+    --prevents re-presses to let das not be buggy
+    poke(0x5f5c,255)
+    playing = true
     --i,o,j,l,z,t,s
     pieces={
         {3840,8738},
@@ -10,6 +13,7 @@ function tetris_init()
         {51,90}
     }
     piecesizes={4,4,3,3,3,3,3}
+    piececolors={8,10,1,9,14,12,11}
     piecebag={}
 
     currpiece={}
@@ -24,11 +28,11 @@ function tetris_init()
     boardsizex=10
     boardsizey=21
     boardx=20
-    boardy=3
+    boardy=2
     board={}
     fillboard()
 
-    das_frames = 0
+    das_frames = -1
 end
 
 function get_are_delay()
@@ -56,12 +60,22 @@ function get_are_delay()
     return clearamnt
 end
 
-function spawn_new_piece()
-    currpiece={
+function get_das_frames()
+    if level < 500 then
+        return 16
+    elseif level < 900 then
+        return 10
+    else
+        return 8
+    end
+end
 
-        pieceid=flr(rnd(7)+1),
+function spawn_new_piece()
+    chosenpid=flr(rnd(7)+1)
+    currpiece={
+        pieceid=chosenpid,
         rotation_ind=1,
-        color=2,
+        color=piececolors[chosenpid],
         x=5,
         y=1,
         piecegrid={}
@@ -98,11 +112,6 @@ function init_piece_grid(p)
         end
     end
 
-    --stop(#p.piecegrid)
-    for r in all(p.piecegrid) do
-        print(r)
-    end
-
 end
 
 function fillboard()
@@ -128,6 +137,10 @@ function accept_game_inputs()
     if controllingpiece then
         active_piece_inputs()
     end
+    if playing then
+        das_inputs()
+    end
+    
 end
 
 function update_counters()
@@ -161,56 +174,71 @@ function set_piece_to_grid(tetri)
     end
 end
 
-function active_piece_inputs()
+function das_inputs()
     if btnp(0) then
-        init_das()
+        init_das(-1)
     end
     if btn(0) then
         continue_das()
     end
     if btnp(1) then
-        init_das()
+        init_das(1)
     end
     if btn(1) then
         continue_das()
     end
-    if btn(0) == btn(1) then
-        kill_das(currpiece)
-    end
+end
 
-    if btnp(2) then
+function active_piece_inputs()
+    if controllingpiece then
+        if btnp(2) then
 
-    end
-    if btnp(3) then
-        
-    end
-    if btn(3) then
-        moveddown = attempt_move_tetrimino_down(currpiece)
-        if not moveddown then
-            lock_piece(currpiece)
         end
-    end
-    if btnp(5) then
-        attempt_rotate_tetrimino(1, currpiece)
-    end
-    if btnp(4) then
-        attempt_rotate_tetrimino(-1, currpiece)
+        if btnp(3) then
+            
+        end
+        if btn(3) then
+            moveddown = attempt_move_tetrimino_down(currpiece)
+            if not moveddown then
+                lock_piece(currpiece)
+            end
+        end
+        if btnp(5) then
+            attempt_rotate_tetrimino(1, currpiece)
+        end
+        if btnp(4) then
+            attempt_rotate_tetrimino(-1, currpiece)
+        end
     end
 end
 
-function init_das()
-    if btnp(0) != btnp(1) then
-        dasframes = 0
-        movedir = 0
-        if (btnp(1)) movedir += 1
-        if (btnp(0)) movedir -= 1
-        attempt_move_tetrimino(movedir, currpiece)
+function init_das(dir)
+    das_direction = dir
+    das_frames = get_das_frames()
+    sfx(1)
+    if controllingpiece then
+        movedir = dir
+        moveresult = attempt_move_tetrimino(movedir, currpiece)
     end
 end
 
 function continue_das()
-    if btnp(0) != btnp(1) then
-        das_frames += 1
+    if not (btnp(0) and btnp(1)) and das_frames > -1 then
+        --stop(das_frames)
+        das_frames -= 1
+        if das_frames < 0 then
+            das_frames = 0
+            if controllingpiece then
+                movedir = 0
+                if (btn(1)) movedir += 1
+                if (btn(0)) movedir -= 1
+                moveresult = attempt_move_tetrimino(movedir, currpiece)
+            end
+                -- mp = moveresult
+            -- if not moveresult then
+            --     kill_das()
+            -- end
+        end
     end
 end
 
@@ -224,8 +252,11 @@ function attempt_move_tetrimino(dir, tetri)
     check_tetrimino.x += dir
     if not is_piece_colliding_grid(check_tetrimino) then
         tetri.x += dir
+        return true
     end
+    return false
 end
+
 
 function attempt_move_tetrimino_down(tetri)
     check_tetrimino = {}
@@ -348,4 +379,6 @@ function tetris_draw()
     draw_board_blocks()
     draw_tetrimino(boardx+currpiece.x*6, boardy+currpiece.y*6,currpiece)
     print(arecounter, 50, 50)
+    print(das_frames, 50, 58)
+    print(mp, 50, 64)
 end

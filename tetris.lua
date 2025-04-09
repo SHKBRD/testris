@@ -131,6 +131,7 @@ end
 function tetris_update60()
     accept_game_inputs()
     update_counters()
+    check_line_clears()
 end
 
 function accept_game_inputs()
@@ -145,6 +146,26 @@ end
 
 function update_counters()
     are_delay_update()
+end
+
+function check_line_clears()
+    clearinds={}
+    for i=#board, 1, -1 do
+        cleared=true
+        for block in all(board[i]) do
+            if not block.issolid then
+                cleared=false
+                break
+            end
+        end
+        if cleared then
+            add(clearinds, i)
+        end
+    end
+    for clear in all(clearinds) do
+        deli(board, clear)
+        
+    end
 end
 
 function are_delay_update()
@@ -192,7 +213,7 @@ end
 function active_piece_inputs()
     if controllingpiece then
         if btnp(2) then
-
+            attempt_fast_drop(currpiece)
         end
         if btnp(3) then
             
@@ -244,6 +265,12 @@ end
 
 function kill_das()
     das_frames = -1
+end
+
+function attempt_fast_drop(tetri)
+    while attempt_move_tetrimino_down(tetri) do
+
+    end
 end
 
 function attempt_move_tetrimino(dir, tetri)

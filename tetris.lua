@@ -6,7 +6,8 @@ function tetris_init()
         {57,150,39,210},
         {60,402,15,147},
         {30,306},
-        {58,178,23,154}
+        {58,178,23,154},
+        {51,90}
     }
     piecesizes={4,4,3,3,3,3,3}
     piecebag={}
@@ -16,12 +17,12 @@ function tetris_init()
     controllingpiece= true
     piecelocking = false
     lineclearing = false
-    arecounter = 0
+    arecounter = -1
 
     level = 0
 
     boardsizex=10
-    boardsizey=20
+    boardsizey=21
     boardx=20
     boardy=3
     board={}
@@ -57,6 +58,7 @@ end
 
 function spawn_new_piece()
     currpiece={
+
         pieceid=flr(rnd(7)+1),
         rotation_ind=1,
         color=2,
@@ -104,11 +106,15 @@ function init_piece_grid(p)
 end
 
 function fillboard()
-    for i=0, boardsizey do
+    for i=1, boardsizey do
         local r={}
         add(board,r)
-        for f=0, boardsizex do
-            add(r,0)
+        for f=1, boardsizex do
+            local gridblock={
+                issolid=false,
+                color=0
+            }
+            add(r,gridblock)
         end
     end
 end
@@ -133,9 +139,25 @@ function are_delay_update()
         arecounter -= 1
     end
     if arecounter == 0 then
+        set_piece_to_grid(currpiece)
         spawn_new_piece()
         controllingpiece = true
         arecounter = -1
+    end
+end
+
+function set_piece_to_grid(tetri)
+    for rowi=0,#tetri.piecegrid-1 do
+        for coli=0,#tetri.piecegrid[rowi+1]-1 do
+            if tetri.piecegrid[rowi+1][coli+1] == 1 then
+                local block={
+                    issolid=true,
+                    color=tetri.color
+                }
+                --stop(tetri.y+rowi)
+                board[tetri.y+rowi][tetri.x+coli] = block
+            end
+        end
     end
 end
 
@@ -224,15 +246,15 @@ function is_piece_colliding_grid(tetri)
             boardpx = tetri.x+col-1
             boardpy = tetri.y+row-1
             if (boardpx < 1 or boardpx>boardsizex) and block != 0 then
-                stop(boardpx)
+                --stop(boardpx)
                 return true
             end
             if (boardpy < 1 or boardpy>boardsizey) and block != 0 then
-                stop(boardpy)
+                --stop(boardpy)
                 return true
             end
-            if block != 0 and board[boardpy][boardpx] != 0 then
-                stop(2)
+            if block != 0 and board[boardpy][boardpx].issolid then
+                --stop(2)
                 return true 
             end
         end
@@ -281,11 +303,11 @@ end
 function lock_piece()
     controllingpiece = false
     piecelocking = true
-    aredelay=get_are_delay()
+    arecounter=get_are_delay()
 end
 
 function draw_board_backing()
-    rectfill(boardx, boardy, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 3)
+    rectfill(boardx, boardy+6, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 3)
 end
 
 function draw_board_block(x, y, block_type)
@@ -293,9 +315,14 @@ function draw_board_block(x, y, block_type)
 end
 
 function draw_board_blocks()
-    for rowi in #b do
-        for coli in #b[rowi] do
-            draw_board_block(coli*6, rowi*6, b[rowi][coli])
+    for rowi=0,#board-1 do
+        for coli=0,(#board[rowi+1]-1) do
+            block = board[rowi+1][coli+1]
+            if block.issolid then
+                draw_board_block(boardx+coli*6, boardy+rowi*6, block.color)
+            -- else
+            --     print(0, boardx+coli*6, boardy+rowi*6, 1)
+            end
         end
     end
 end
@@ -318,5 +345,7 @@ end
 function tetris_draw()
     cls()
     draw_board_backing()
+    draw_board_blocks()
     draw_tetrimino(boardx+currpiece.x*6, boardy+currpiece.y*6,currpiece)
+    print(arecounter, 50, 50)
 end

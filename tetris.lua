@@ -9,19 +9,16 @@ function tetris_init()
         {58,178,23,154}
     }
     piecesizes={4,4,3,3,3,3,3}
-    i={3840, 8738}
-    o={1932}
-    j={57,150,39,210}
+    piecebag={}
 
-    currpiece={
-        pieceid=1,
-        rotation_ind=1,
-        color=2,
-        x=5,
-        y=1,
-        piecegrid={}
-    }
-    init_piece_grid(currpiece)
+    currpiece={}
+    spawn_new_piece()
+    controllingpiece= true
+    piecelocking = false
+    lineclearing = false
+    arecounter = 0
+
+    level = 0
 
     boardsizex=10
     boardsizey=20
@@ -31,6 +28,43 @@ function tetris_init()
     fillboard()
 
     das_frames = 0
+end
+
+function get_are_delay()
+    clearamnt=0
+    
+    if level < 700 then
+        clearamnt = 25
+    elseif level < 800 then
+        clearamnt = 16
+    else
+        clearamnt = 12
+    end
+    
+    if lineclearing then
+        if level < 600 then
+            clearamnt += 25
+        elseif level < 700 then
+            clearamnt += 16
+        elseif level < 800 then
+            clearamnt += 12
+        else
+            clearamnt += 6
+        end
+    end
+    return clearamnt
+end
+
+function spawn_new_piece()
+    currpiece={
+        pieceid=flr(rnd(7)+1),
+        rotation_ind=1,
+        color=2,
+        x=5,
+        y=1,
+        piecegrid={}
+    }
+    init_piece_grid(currpiece)
 end
 
 function init_piece_grid(p)
@@ -81,9 +115,31 @@ end
 
 function tetris_update60()
     accept_game_inputs()
+    update_counters()
 end
 
 function accept_game_inputs()
+    if controllingpiece then
+        active_piece_inputs()
+    end
+end
+
+function update_counters()
+    are_delay_update()
+end
+
+function are_delay_update()
+    if arecounter > 0 then
+        arecounter -= 1
+    end
+    if arecounter == 0 then
+        spawn_new_piece()
+        controllingpiece = true
+        arecounter = -1
+    end
+end
+
+function active_piece_inputs()
     if btnp(0) then
         init_das()
     end
@@ -171,7 +227,7 @@ function is_piece_colliding_grid(tetri)
                 stop(boardpx)
                 return true
             end
-            if (boardpy < 1 or boardpx>boardsizex) and block != 0 then
+            if (boardpy < 1 or boardpy>boardsizey) and block != 0 then
                 stop(boardpy)
                 return true
             end
@@ -220,6 +276,12 @@ function rotate_tetrimino(dir, tetri)
         --stop(currpiece.rotation_ind)
     end
     init_piece_grid(tetri)
+end
+
+function lock_piece()
+    controllingpiece = false
+    piecelocking = true
+    aredelay=get_are_delay()
 end
 
 function draw_board_backing()

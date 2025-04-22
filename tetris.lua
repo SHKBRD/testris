@@ -36,29 +36,32 @@ function tetris_init()
     das_frames = -1
 end
 
-function get_are_delay()
+function get_are_delay(lineclearing)
     clearamnt=0
-    
-    if level < 700 then
-        clearamnt = 25
-    elseif level < 800 then
-        clearamnt = 16
-    else
-        clearamnt = 12
-    end
-    
-    if lineclearing then
-        if level < 600 then
-            clearamnt += 25
-        elseif level < 700 then
-            clearamnt += 16
+    if not lineclearing then
+        if level < 700 then
+            clearamnt = 25
         elseif level < 800 then
-            clearamnt += 12
+            clearamnt = 16
         else
-            clearamnt += 6
+            clearamnt = 12
+        end
+    else    
+        if level < 600 then
+            clearamnt = 25
+        elseif level < 700 then
+            clearamnt = 16
+        elseif level < 800 then
+            clearamnt = 12
+        else
+            clearamnt = 6
         end
     end
     return clearamnt
+end
+
+function get_gravity()
+
 end
 
 function get_das_frames()
@@ -105,7 +108,8 @@ function spawn_new_piece()
         color=piececolors[nextpiece],
         x=5,
         y=1,
-        piecegrid={}
+        piecegrid={},
+        gravcounter=0
     }
     update_next_piece()
     init_piece_grid(currpiece)
@@ -159,7 +163,9 @@ end
 function tetris_update60()
     accept_game_inputs()
     update_counters()
-    check_line_clears()
+    if arecounter == 0 then
+        check_line_clears()
+    end
 end
 
 function accept_game_inputs()
@@ -190,6 +196,9 @@ function check_line_clears()
             add(clearinds, i)
         end
     end
+    if #clearinds > 0 then
+        arecounter = get_are_delay(true)
+    end
     for clear in all(clearinds) do
         --stop(clear)
         deli(board, clear)
@@ -202,14 +211,14 @@ function check_line_clears()
             }
             add(r,gridblock)
         end
+        level += 1
     end
 end
 
 function are_delay_update()
     if arecounter > 0 then
         arecounter -= 1
-    end
-    if arecounter == 0 then
+    elseif arecounter == 0 then
         --set_piece_to_grid(currpiece)
         spawn_new_piece()
         controllingpiece = true
@@ -259,6 +268,9 @@ function active_piece_inputs()
             moveddown = attempt_move_tetrimino_down(currpiece)
             if not moveddown then
                 lock_piece(currpiece)
+                if not ((level % 100) == 99) or level == 998 then
+                    level+=1
+                end
                 --prevent piece actions once locked
                 return
             end
@@ -402,7 +414,7 @@ function lock_piece()
     piecelocking = true
     set_piece_to_grid(currpiece)
     currpiece = nil
-    arecounter=get_are_delay()
+    arecounter=get_are_delay(false)
 end
 
 function draw_board_backing()
@@ -460,6 +472,7 @@ function tetris_draw()
     draw_tetrimino(100, 20, nextp)
     print(arecounter, 50, 50)
     print(das_frames, 50, 58)
+    print(level, 100, 110)
     for pind=1,#piecebag,1 do
         print(piecebag[pind], 100,50+pind*8)
     end

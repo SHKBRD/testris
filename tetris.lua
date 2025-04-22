@@ -164,7 +164,15 @@ function check_line_clears()
     end
     for clear in all(clearinds) do
         deli(board, clear)
-        
+        local r={}
+        add(board,r,1)
+        for f=1, boardsizex do
+            local gridblock={
+                issolid=false,
+                color=0
+            }
+            add(r,gridblock)
+        end
     end
 end
 

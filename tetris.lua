@@ -3,17 +3,18 @@ function tetris_init()
     poke(0x5f5c,255)
     playing = true
     --i,o,j,l,z,t,s
+    nextpiece=flr(rnd(5)+1)
     pieces={
         {3840,8738},
         {1632},
         {57,150,39,210},
         {60,402,15,147},
-        {30,306},
         {58,178,23,154},
+        {30,306},
         {51,90}
     }
     piecesizes={4,4,3,3,3,3,3}
-    piececolors={8,10,1,9,14,12,11}
+    piececolors={8,10,1,9,12,14,11}
     piecebag={}
 
     currpiece={}
@@ -70,16 +71,43 @@ function get_das_frames()
     end
 end
 
+function chose_piece_id()
+    tries=6
+    chosenpid=0
+    for t=1, tries do 
+        local unique = true
+        chosenpid=flr(rnd(7)+1)
+        for checkpiece in all(piecebag) do
+            if checkpiece==chosenpid then
+                unique=false
+                break
+            end
+        end
+        if unique then
+            break
+        end
+    end
+    add(piecebag, chosenpid)
+    if #piecebag > 6 then
+        deli(piecebag, 1)
+    end
+    return chosenpid
+end
+
+function update_next_piece()
+    nextpiece=chose_piece_id()
+end
+
 function spawn_new_piece()
-    chosenpid=flr(rnd(7)+1)
     currpiece={
-        pieceid=chosenpid,
+        pieceid=nextpiece,
         rotation_ind=1,
-        color=piececolors[chosenpid],
+        color=piececolors[nextpiece],
         x=5,
         y=1,
         piecegrid={}
     }
+    update_next_piece()
     init_piece_grid(currpiece)
 end
 
@@ -135,7 +163,7 @@ function tetris_update60()
 end
 
 function accept_game_inputs()
-    if controllingpiece then
+    if controllingpiece and currpiece != nil then
         active_piece_inputs()
     end
     if playing then
@@ -150,7 +178,7 @@ end
 
 function check_line_clears()
     clearinds={}
-    for i=#board, 1, -1 do
+    for i=1, #board, 1 do
         cleared=true
         for block in all(board[i]) do
             if not block.issolid then
@@ -163,6 +191,7 @@ function check_line_clears()
         end
     end
     for clear in all(clearinds) do
+        --stop(clear)
         deli(board, clear)
         local r={}
         add(board,r,1)
@@ -181,7 +210,7 @@ function are_delay_update()
         arecounter -= 1
     end
     if arecounter == 0 then
-        set_piece_to_grid(currpiece)
+        --set_piece_to_grid(currpiece)
         spawn_new_piece()
         controllingpiece = true
         arecounter = -1
@@ -230,6 +259,8 @@ function active_piece_inputs()
             moveddown = attempt_move_tetrimino_down(currpiece)
             if not moveddown then
                 lock_piece(currpiece)
+                --prevent piece actions once locked
+                return
             end
         end
         if btnp(5) then
@@ -369,6 +400,8 @@ end
 function lock_piece()
     controllingpiece = false
     piecelocking = true
+    set_piece_to_grid(currpiece)
+    currpiece = nil
     arecounter=get_are_delay()
 end
 
@@ -377,7 +410,7 @@ function draw_board_backing()
 end
 
 function draw_board_block(x, y, block_type)
-    rect(x,y,x+5,y+5,block_type)
+    rectfill(x,y,x+5,y+5,block_type)
 end
 
 function draw_board_blocks()
@@ -412,8 +445,22 @@ function tetris_draw()
     cls()
     draw_board_backing()
     draw_board_blocks()
-    draw_tetrimino(boardx+currpiece.x*6, boardy+currpiece.y*6,currpiece)
+    if currpiece then
+        draw_tetrimino(boardx+currpiece.x*6, boardy+currpiece.y*6,currpiece)
+    end
+    nextp={
+        pieceid=piecebag[#piecebag],
+        rotation_ind=1,
+        color=piececolors[piecebag[#piecebag]],
+        x=5,
+        y=1,
+        piecegrid={}
+    }
+    init_piece_grid(nextp)
+    draw_tetrimino(100, 20, nextp)
     print(arecounter, 50, 50)
     print(das_frames, 50, 58)
-    print(mp, 50, 64)
+    for pind=1,#piecebag,1 do
+        print(piecebag[pind], 100,50+pind*8)
+    end
 end

@@ -17,6 +17,25 @@ function tetris_init()
     piececolors={8,10,1,9,12,14,11}
     piecebag={}
 
+    gravitylevel={
+        0,  30 ,35 ,40 ,
+        50 ,60 ,70 ,80 ,
+        90,100,120,140,
+        160,170,200,220,
+        230,233,236,239,
+        243,247,251,300,
+        330,360,400,420,450,500
+    }
+    gravityamnt={
+        4  ,6  ,8  ,10 ,
+        12 ,16 ,32 ,48 ,
+        64 ,80 ,96 ,112,
+        128,144,4  ,32 ,
+        64 ,96 ,128,160,
+        192,224,256,512,
+        768,1024,1280,1024,768,5120
+    }
+
     currpiece={}
     spawn_new_piece()
     controllingpiece= true
@@ -60,8 +79,13 @@ function get_are_delay(lineclearing)
     return clearamnt
 end
 
-function get_gravity()
-
+function get_gravity(flevel)
+    for i=#gravitylevel, 1, -1 do
+        if flevel >= gravitylevel[i] then
+            return gravityamnt[i]
+        end
+    end
+    return 0
 end
 
 function get_das_frames()
@@ -112,6 +136,16 @@ function spawn_new_piece()
         gravcounter=0
     }
     update_next_piece()
+
+    --irs
+    if not (btn(4) and btn(5)) then
+        if btn(4) then
+            attempt_rotate_tetrimino(-1, currpiece)
+        elseif btn(5) then
+            attempt_rotate_tetrimino(1, currpiece)
+        end
+    end
+
     init_piece_grid(currpiece)
 end
 
@@ -180,6 +214,9 @@ end
 
 function update_counters()
     are_delay_update()
+    if currpiece != nil then
+        apply_piece_gravity(currpiece)
+    end
 end
 
 function check_line_clears()
@@ -269,7 +306,7 @@ function active_piece_inputs()
             if not moveddown then
                 lock_piece(currpiece)
                 if not ((level % 100) == 99) or level == 998 then
-                    level+=1
+                    level += 1
                 end
                 --prevent piece actions once locked
                 return
@@ -280,6 +317,19 @@ function active_piece_inputs()
         end
         if btnp(4) then
             attempt_rotate_tetrimino(-1, currpiece)
+        end
+    end
+end
+
+function apply_piece_gravity(tetri)
+    gravity_add_amnt = get_gravity(level)
+    tetri.gravcounter += gravity_add_amnt
+    while tetri.gravcounter >= 256 do
+        tetri.gravcounter -= 256
+        moved=attempt_move_tetrimino_down(tetri)
+        if not moved then
+            tetri.gravcounter=0
+            break
         end
     end
 end

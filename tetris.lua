@@ -130,7 +130,7 @@ function spawn_new_piece()
         pieceid=nextpiece,
         rotation_ind=1,
         color=piececolors[nextpiece],
-        x=5,
+        x=4,
         y=1,
         piecegrid={},
         gravcounter=0

@@ -1,6 +1,9 @@
 function tetris_init()
     --prevents re-presses to let das not be buggy
     poke(0x5f5c,255)
+    --prevent pal clearing
+    poke(0x5f2e, 1)
+    --pal(1, 140, 1)
     playing = true
     --i,o,j,l,z,t,s
     nextpiece=flr(rnd(5)+1)
@@ -14,7 +17,7 @@ function tetris_init()
         {51,90}
     }
     piecesizes={4,4,3,3,3,3,3}
-    piececolors={8,10,1,9,12,14,11}
+    piececolors={8,10,141,9,12,14,11}
     piecebag={}
 
     gravitylevel={
@@ -46,7 +49,7 @@ function tetris_init()
     lineclearing = false
     arecounter = -1
 
-    level = 0
+    level = 500
 
     boardsizex=10
     boardsizey=21
@@ -126,6 +129,8 @@ end
 
 function update_next_piece()
     nextpiece=chose_piece_id()
+    
+    --stop(piececolors[nextpiece])
 end
 
 function spawn_new_piece()
@@ -140,7 +145,7 @@ function spawn_new_piece()
         locking=false,
     }
     update_next_piece()
-
+    pal(15, currpiece.color, 1)
     --irs
     if not (btn(4) and btn(5)) then
         if btn(4) then
@@ -501,9 +506,9 @@ function lock_piece()
 end
 
 function draw_board_backing()
-    rectfill(boardx-2, boardy+2, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
-    rectfill(boardx-1, boardy+3, boardx+boardsizex*6, boardy+boardsizey*6, 7)
-    rectfill(boardx, boardy+4, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 0)
+    rect(boardx-2, boardy+4, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
+    rect(boardx-1, boardy+5, boardx+boardsizex*6, boardy+boardsizey*6, 7)
+    --rectfill(boardx, boardy+4, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 0)
 end
 
 function draw_board_block(x, y, block_type)
@@ -554,16 +559,13 @@ function draw_tetrimino(x, y, p)
     end
 end
 
-function tetris_draw()
-    cls()
-    draw_board_backing()
-    draw_board_blocks()
-    if currpiece then
-        draw_tetrimino(boardx+currpiece.x*6, boardy+currpiece.y*6,currpiece)
-    end
-    if lockedpiece != nil then
-        draw_tetrimino(boardx+lockedpiece.x*6, boardy+lockedpiece.y*6,lockedpiece)
-    end
+function draw_currpiece()
+    drawcurr = deepcopy(currpiece)
+    drawcurr.color=15
+    draw_tetrimino(boardx+drawcurr.x*6, boardy+drawcurr.y*6,drawcurr)
+end 
+
+function draw_nextpiece()
     nextp={
         pieceid=piecebag[#piecebag],
         rotation_ind=1,
@@ -573,9 +575,29 @@ function tetris_draw()
         piecegrid={}
     }
     init_piece_grid(nextp)
-    draw_tetrimino(100, 20, nextp)
-    print(arecounter, 50, 50)
-    print(das_frames, 50, 58)
+    drawnext = deepcopy(nextp)
+    drawnext.color=4
+    pal(4, piececolors[nextpiece], 1)
+    draw_tetrimino(100, 20, drawnext)
+    --stop(color())
+end 
+
+function tetris_draw()
+    cls()
+    draw_board_backing()
+    draw_board_blocks()
+    if currpiece then
+        draw_currpiece()
+    end
+    if lockedpiece != nil and lockedpiece_counter<lockedpiece_counter_max then
+        draw_tetrimino(boardx+lockedpiece.x*6, boardy+lockedpiece.y*6,lockedpiece)
+    end
+    
+    
+    draw_nextpiece()
+    --draw_tetrimino(100, 20, nextp)
+    --print(arecounter, 50, 50)
+    --print(das_frames, 50, 58)
     print(level, 100, 110)
     print(lockedpiece_counter, 100, 118)
     for pind=1,#piecebag,1 do

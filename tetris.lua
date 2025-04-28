@@ -56,7 +56,7 @@ function tetris_init()
     lineclearing = false
     arecounter = -1
 
-    level = 500
+    level = 0
 
     boardsizex=10
     boardsizey=21

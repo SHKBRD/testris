@@ -167,9 +167,7 @@ function init_piece_grid(p)
     checkbit=shl(0b1, (tsize*tsize)-1)
     checkbit=band(checkbit, 0b1111111111111111)
     checknum=0
-    --stop(tostr(piecenum, 1))
     while abs(checkbit)>0 do
-        --stop(tostr(checkbit,1))
         if checkbit & piecenum != 0 then
             p.piecegrid[flr(checknum/tsize)+1][(checknum%tsize)+1] = 1
         end
@@ -218,9 +216,7 @@ end
 
 function update_counters()
     are_delay_update()
-    if lockedpiece != nil then
-        lockedpiece_update()
-    end
+    lockedpiece_update()
     if currpiece != nil then
         apply_piece_gravity(currpiece)
     end
@@ -250,9 +246,11 @@ function check_line_clears()
     end
     if #clearinds > 0 then
         arecounter = get_are_delay(true)
+        lineclearing = true
+    else
+        lineclearing = false
     end
     for clear in all(clearinds) do
-        --stop(clear)
         deli(board, clear)
         local r={}
         add(board,r,1)
@@ -286,7 +284,6 @@ function set_piece_to_grid(tetri)
                     issolid=true,
                     color=tetri.color
                 }
-                --stop(tetri.y+rowi)
                 board[tetri.y+rowi][tetri.x+coli] = block
             end
         end
@@ -361,7 +358,6 @@ end
 
 function continue_das()
     if not (btnp(0) and btnp(1)) and das_frames > -1 then
-        --stop(das_frames)
         das_frames -= 1
         if das_frames < 0 then
             das_frames = 0
@@ -371,10 +367,6 @@ function continue_das()
                 if (btn(0)) movedir -= 1
                 moveresult = attempt_move_tetrimino(movedir, currpiece)
             end
-                -- mp = moveresult
-            -- if not moveresult then
-            --     kill_das()
-            -- end
         end
     end
 end
@@ -406,7 +398,6 @@ function attempt_move_tetrimino_down(tetri)
     check_tetrimino = deepcopy(tetri, {})
     check_tetrimino.y += 1
     if not is_piece_colliding_grid(check_tetrimino) then
-        --stop(12)
         tetri.y = check_tetrimino.y
         return true
     end
@@ -420,15 +411,12 @@ function is_piece_colliding_grid(tetri)
             boardpx = tetri.x+col-1
             boardpy = tetri.y+row-1
             if (boardpx < 1 or boardpx>boardsizex) and block != 0 then
-                --stop(boardpx)
                 return true
             end
             if (boardpy < 1 or boardpy>boardsizey) and block != 0 then
-                --stop(boardpy)
                 return true
             end
             if block != 0 and board[boardpy][boardpx].issolid then
-                --stop(2)
                 return true 
             end
         end
@@ -442,26 +430,14 @@ function attempt_rotate_tetrimino(dir, tetri)
     can_rotate = true
     checking_kick = true
     if check_tetrimino.pieceid <= 5 and check_tetrimino.pieceid >= 3 and (check_tetrimino.rotation_ind%2)==1 then
-        --stop(check_tetrimino.rotation_ind)
         for row=1,#check_tetrimino.piecegrid do
             for col=1,#check_tetrimino.piecegrid[row] do
                 block = check_tetrimino.piecegrid[row][col]
-                --stop(block)
                 if block == 0 then
-                    --stop((row-1)*3+col)
                     boardpx = check_tetrimino.x+col-1
                     boardpy = check_tetrimino.y+row-1
-                    -- if (boardpx < 1 or boardpx>boardsizex) and block != 0 then
-                    --     --stop(boardpx)
-                    --     return true
-                    -- end
-                    -- if (boardpy < 1 or boardpy>boardsizey) and block != 0 then
-                    --     --stop(boardpy)
-                    --     return true
-                    -- end
                     
                     if board[boardpy][boardpx].issolid and col == 2 then
-                        --stop(2)
                         can_rotate = false
                         checking_kick = false
                     end
@@ -474,7 +450,6 @@ function attempt_rotate_tetrimino(dir, tetri)
     end
     checking_kick = false
     if not can_rotate then 
-        --stop("no kick!")
         return
     end
 
@@ -505,13 +480,11 @@ function rotate_tetrimino(dir, tetri)
         if tetri.rotation_ind > #pieces[tetri.pieceid] then
             tetri.rotation_ind = 1
         end
-        --stop(currpiece.rotation_ind)
     elseif dir==-1 then
         tetri.rotation_ind -= 1
         if tetri.rotation_ind < 1 then
             tetri.rotation_ind = #pieces[tetri.pieceid]
         end
-        --stop(currpiece.rotation_ind)
     end
     init_piece_grid(tetri)
 end
@@ -519,6 +492,7 @@ end
 function lock_piece()
     lockedpiece=deepcopy(currpiece)
     lockedpiece.color=7
+    lockedpiece_counter=0
     controllingpiece = false
     piecelocking = true
     set_piece_to_grid(currpiece)
@@ -538,21 +512,31 @@ end
 
 function draw_board_blocks()
     for rowi=0,#board-1 do
-        for coli=0,(#board[rowi+1]-1) do
-            block = board[rowi+1][coli+1]
-            if block.issolid then
-                draw_board_block(boardx+coli*6, boardy+rowi*6, block.color)
-            -- else
-            --     print(0, boardx+coli*6, boardy+rowi*6, 1)
+        cleared = true
+        for coli=1,(#board[rowi+1]) do
+            block = board[rowi+1][coli]
+            if not block.issolid then
+                cleared = false
+                break
             end
+        end
+        if not cleared then
+            for coli=0,(#board[rowi+1]-1) do
+                block = board[rowi+1][coli+1]
+                if block.issolid then
+                    draw_board_block(boardx+coli*6, boardy+rowi*6, block.color)
+                -- else
+                --     print(0, boardx+coli*6, boardy+rowi*6, 1)
+                end
+            end
+        else
+            lockedpiece_counter = lockedpiece_counter_max
         end
     end
 end
 
 function draw_tetrimino(x, y, p)
-    --stop(#p.piecegrid[1])
     for rowi=1, #p.piecegrid do
-        --stop()
         for coli=1, #p.piecegrid[rowi] do
             bx=x+(coli-2)*6
             by=y+(rowi-2)*6
@@ -593,6 +577,7 @@ function tetris_draw()
     print(arecounter, 50, 50)
     print(das_frames, 50, 58)
     print(level, 100, 110)
+    print(lockedpiece_counter, 100, 118)
     for pind=1,#piecebag,1 do
         print(piecebag[pind], 100,50+pind*8)
     end

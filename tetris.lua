@@ -37,6 +37,9 @@ function tetris_init()
     }
 
     currpiece={}
+    lockedpiece=nil
+    lockedpiece_counter=0
+    lockedpiece_counter_max=4
     spawn_new_piece()
     controllingpiece= true
     piecelocking = false
@@ -48,7 +51,7 @@ function tetris_init()
     boardsizex=10
     boardsizey=21
     boardx=20
-    boardy=2
+    boardy=0
     board={}
     fillboard()
 
@@ -133,7 +136,8 @@ function spawn_new_piece()
         x=4,
         y=1,
         piecegrid={},
-        gravcounter=0
+        gravcounter=0,
+        locking=false,
     }
     update_next_piece()
 
@@ -214,8 +218,19 @@ end
 
 function update_counters()
     are_delay_update()
+    if lockedpiece != nil then
+        lockedpiece_update()
+    end
     if currpiece != nil then
         apply_piece_gravity(currpiece)
+    end
+end
+
+function lockedpiece_update()
+    lockedpiece_counter+=1
+    if lockedpiece_counter >= lockedpiece_counter_max then
+        lockedpiece=nil
+        lockedpiece_counter=0
     end
 end
 
@@ -459,7 +474,7 @@ function attempt_rotate_tetrimino(dir, tetri)
     end
     checking_kick = false
     if not can_rotate then 
-        stop("no kick!")
+        --stop("no kick!")
         return
     end
 
@@ -502,6 +517,8 @@ function rotate_tetrimino(dir, tetri)
 end
 
 function lock_piece()
+    lockedpiece=deepcopy(currpiece)
+    lockedpiece.color=7
     controllingpiece = false
     piecelocking = true
     set_piece_to_grid(currpiece)
@@ -510,7 +527,9 @@ function lock_piece()
 end
 
 function draw_board_backing()
-    rectfill(boardx, boardy+6, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 3)
+    rectfill(boardx-2, boardy+2, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
+    rectfill(boardx-1, boardy+3, boardx+boardsizex*6, boardy+boardsizey*6, 7)
+    rectfill(boardx, boardy+4, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 0)
 end
 
 function draw_board_block(x, y, block_type)
@@ -539,7 +558,13 @@ function draw_tetrimino(x, y, p)
             by=y+(rowi-2)*6
             result=p.piecegrid[rowi][coli]
             if result != 0 then
-                draw_board_block(bx,by,p.color)
+                if p.locking == true then
+                    draw_board_block(bx,by,6)
+                else
+                    draw_board_block(bx,by,p.color)
+                end
+                
+
             end
         end
     end
@@ -551,6 +576,9 @@ function tetris_draw()
     draw_board_blocks()
     if currpiece then
         draw_tetrimino(boardx+currpiece.x*6, boardy+currpiece.y*6,currpiece)
+    end
+    if lockedpiece != nil then
+        draw_tetrimino(boardx+lockedpiece.x*6, boardy+lockedpiece.y*6,lockedpiece)
     end
     nextp={
         pieceid=piecebag[#piecebag],

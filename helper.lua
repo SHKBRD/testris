@@ -19,3 +19,12 @@ function deepcopy(orig, copies)
     end
     return copy
 end
+
+function findin(table, item)
+    for i=1,#table do
+        if table[i] == item then
+            return i
+        end
+    end
+    return -1
+end

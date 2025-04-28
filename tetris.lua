@@ -3,7 +3,7 @@ function tetris_init()
     poke(0x5f5c,255)
     --prevent pal clearing
     poke(0x5f2e, 1)
-    --pal(1, 140, 1)
+    pal(1, 129, 1)
     playing = true
     --i,o,j,l,z,t,s
     nextpiece=flr(rnd(5)+1)
@@ -17,7 +17,14 @@ function tetris_init()
         {51,90}
     }
     piecesizes={4,4,3,3,3,3,3}
-    piececolors={8,10,141,9,12,14,11}
+    piececolors={8,10,140,9,12,14,11}
+    pal(8, 128+8, 1)
+    pal(9, 9, 1)
+    pal(10, 1, 1)
+    pal(11, 4, 1)
+    pal(12, 140, 1)
+    pal(13, 143, 1)
+    pal(14, 3, 1)
     piecebag={}
 
     gravitylevel={
@@ -508,7 +515,9 @@ end
 function draw_board_backing()
     rect(boardx-2, boardy+4, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
     rect(boardx-1, boardy+5, boardx+boardsizex*6, boardy+boardsizey*6, 7)
-    --rectfill(boardx, boardy+4, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 0)
+    fillp(0b1101011111101011)
+    rectfill(boardx, boardy+6, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 1)
+    fillp()
 end
 
 function draw_board_block(x, y, block_type)
@@ -529,7 +538,7 @@ function draw_board_blocks()
             for coli=0,(#board[rowi+1]-1) do
                 block = board[rowi+1][coli+1]
                 if block.issolid then
-                    draw_board_block(boardx+coli*6, boardy+rowi*6, block.color)
+                    draw_board_block(boardx+coli*6, boardy+rowi*6, findin(piececolors, block.color)+7)
                 -- else
                 --     print(0, boardx+coli*6, boardy+rowi*6, 1)
                 end

@@ -55,6 +55,8 @@ function tetris_init()
     piecelocking = false
     lineclearing = false
     arecounter = -1
+    clear_particles_addable = true
+    clearparts={}
 
     level = 0
 
@@ -227,12 +229,26 @@ function accept_game_inputs()
     
 end
 
+function update_clear_parts()
+    removeparts={}
+    for parti=1,#clearparts do
+        clearparts[parti].timer-=1
+        if clearparts[parti].timer == 0 then
+            add(removeparts, parti)
+        end
+    end
+    for i=#removeparts,1,-1 do
+        deli(clearparts, i)
+    end
+end
+
 function update_counters()
     are_delay_update()
     lockedpiece_update()
     if currpiece != nil then
         apply_piece_gravity(currpiece)
     end
+    update_clear_parts()
 end
 
 function lockedpiece_update()
@@ -240,6 +256,18 @@ function lockedpiece_update()
     if lockedpiece_counter >= lockedpiece_counter_max then
         lockedpiece=nil
         lockedpiece_counter=0
+    end
+end
+
+function make_line_clear_effect(row)
+    for col=1,boardsizex do
+        part={
+            x=col,
+            y=row,
+            color=board[row][col].color,
+            timer=10
+        }
+        add(clearparts, part)
     end
 end
 
@@ -284,6 +312,7 @@ function are_delay_update()
     elseif arecounter == 0 then
         spawn_new_piece()
         controllingpiece = true
+        clear_particles_addable = true
         arecounter = -1
     end
 end
@@ -598,6 +627,9 @@ function draw_board_blocks()
             for coli2=1,boardsizex do
                 board[rowi+1][coli2].cleared = true
             end
+            if clear_particles_addable then
+                make_line_clear_effect(rowi+1)
+            end
         end
         if not cleared then
             for coli=0,(#board[rowi+1]-1) do
@@ -613,6 +645,9 @@ function draw_board_blocks()
             
             lockedpiece_counter = lockedpiece_counter_max
         end
+    end
+    if clear_particles_addable and #clearparts != 0 then
+        clear_particles_addable = false
     end
 end
 
@@ -658,6 +693,12 @@ function draw_nextpiece()
     --stop(color())
 end 
 
+function draw_clear_parts()
+    for part in all(clearparts) do
+        circfill(boardx+part.x*6,boardy+part.y*6,part.timer,part.color)
+    end
+end
+
 function tetris_draw()
     cls()
     draw_board_backing()
@@ -669,7 +710,7 @@ function tetris_draw()
         draw_tetrimino(boardx+lockedpiece.x*6, boardy+lockedpiece.y*6,lockedpiece)
     end
     
-    
+    draw_clear_parts()
     draw_nextpiece()
     --draw_tetrimino(100, 20, nextp)
     --print(arecounter, 50, 50)

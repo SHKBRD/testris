@@ -18,12 +18,12 @@ function tetris_init()
     }
     piecesizes={4,4,3,3,3,3,3}
     piececolors={8,10,140,9,12,14,11}
-    pal(8, 128+8, 1)
+    pal(8, 2, 1)
     pal(9, 9, 1)
     pal(10, 1, 1)
     pal(11, 4, 1)
     pal(12, 140, 1)
-    pal(13, 143, 1)
+    pal(13, 128+8, 1)
     pal(14, 3, 1)
     piecebag={}
 
@@ -361,7 +361,7 @@ end
 function init_das(dir)
     das_direction = dir
     das_frames = get_das_frames()
-    sfx(1)
+    --sfx(1)
     if controllingpiece then
         movedir = dir
         moveresult = attempt_move_tetrimino(movedir, currpiece)
@@ -524,6 +524,53 @@ function draw_board_block(x, y, block_type)
     rectfill(x,y,x+5,y+5,block_type)
 end
 
+function draw_block_outline(row, col)
+    for frow=-1, 1 do
+        for fcol=-1, 1 do
+            x1=0
+            x2=0
+            y1=0
+            y2=0
+            sxoff=0
+            if row+frow<=0 or row+frow>=boardsizey or col+fcol<=-1 or col+fcol>=boardsizex or (frow==0 and fcol==frow) or ((fcol+frow)%2==0) or board[row+frow+1][col+fcol+1].issolid then
+            else
+                    if frow==0 then
+                        x1=(fcol+1)/2
+                        x2=(fcol+1)/2
+                    else
+                        x1=0
+                        x2=1
+                        sxoff=1
+                    end
+
+                    if fcol==0 then
+                        y1=(frow+1)/2
+                        y2=(frow+1)/2
+                    else
+                        y1=0
+                        y2=1
+                    end
+
+                
+                xoff=0
+                if x1+x2 == 1 then
+                    xoff-=1
+                end
+                if x1+x2 > 1 then
+                    xoff-=1
+                end
+                if x1+x2+y1+y2!=0 then
+                    line(
+                        boardx+(col+x1)*6+xoff+sxoff,
+                        boardy+(row+y1)*6,
+                        boardx+(col+x2)*6+xoff,
+                        boardy+(row+y2)*6,7)
+                end
+            end
+        end
+    end
+end
+
 function draw_board_blocks()
     for rowi=0,#board-1 do
         cleared = true
@@ -539,7 +586,8 @@ function draw_board_blocks()
                 block = board[rowi+1][coli+1]
                 if block.issolid then
                     draw_board_block(boardx+coli*6, boardy+rowi*6, findin(piececolors, block.color)+7)
-                -- else
+                    draw_block_outline(rowi, coli)
+                    -- else
                 --     print(0, boardx+coli*6, boardy+rowi*6, 1)
                 end
             end

@@ -515,7 +515,7 @@ end
 function draw_board_backing()
     rect(boardx-2, boardy+4, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
     rect(boardx-1, boardy+5, boardx+boardsizex*6, boardy+boardsizey*6, 7)
-    fillp(0b1101011111101011)
+    fillp(0b1000010000100001)
     rectfill(boardx, boardy+6, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 1)
     fillp()
 end

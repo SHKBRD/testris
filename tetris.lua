@@ -201,6 +201,7 @@ function fillboard()
         for f=1, boardsizex do
             local gridblock={
                 issolid=false,
+                cleared=false,
                 color=0
             }
             add(r,gridblock)
@@ -281,7 +282,6 @@ function are_delay_update()
     if arecounter > 0 then
         arecounter -= 1
     elseif arecounter == 0 then
-        --set_piece_to_grid(currpiece)
         spawn_new_piece()
         controllingpiece = true
         arecounter = -1
@@ -294,6 +294,7 @@ function set_piece_to_grid(tetri)
             if tetri.piecegrid[rowi+1][coli+1] == 1 then
                 local block={
                     issolid=true,
+                    cleared=false,
                     color=tetri.color
                 }
                 board[tetri.y+rowi][tetri.x+coli] = block
@@ -515,7 +516,7 @@ end
 function draw_board_backing()
     rect(boardx-2, boardy+4, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
     rect(boardx-1, boardy+5, boardx+boardsizex*6, boardy+boardsizey*6, 7)
-    fillp(0b1000010000100001)
+    fillp(0b1100011000111001)
     rectfill(boardx, boardy+6, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 1)
     fillp()
 end
@@ -532,24 +533,26 @@ function draw_block_outline(row, col)
             y1=0
             y2=0
             sxoff=0
-            if row+frow<=0 or row+frow>=boardsizey or col+fcol<=-1 or col+fcol>=boardsizex or (frow==0 and fcol==frow) or ((fcol+frow)%2==0) or board[row+frow+1][col+fcol+1].issolid then
+            syoff=0
+            if row+frow<=0 or row+frow>=boardsizey or col+fcol<=-1 or col+fcol>=boardsizex or (frow==0 and fcol==frow) or ((fcol+frow)%2==0) or (board[row+frow+1][col+fcol+1].issolid and board[row+frow+1][col+fcol+1].cleared == false) then
             else
-                    if frow==0 then
-                        x1=(fcol+1)/2
-                        x2=(fcol+1)/2
-                    else
-                        x1=0
-                        x2=1
-                        sxoff=1
-                    end
+                if frow==0 then
+                    x1=(fcol+1)/2
+                    x2=(fcol+1)/2
+                else
+                    x1=0
+                    x2=1
+                    sxoff=1
+                end
 
-                    if fcol==0 then
-                        y1=(frow+1)/2
-                        y2=(frow+1)/2
-                    else
-                        y1=0
-                        y2=1
-                    end
+                if fcol==0 then
+                    y1=(frow+1)/2
+                    y2=(frow+1)/2
+                else
+                    y1=0
+                    y2=1
+                    syoff=1
+                end
 
                 
                 xoff=0
@@ -559,12 +562,21 @@ function draw_block_outline(row, col)
                 if x1+x2 > 1 then
                     xoff-=1
                 end
+
+                yoff=0
+                if y1+y2 == 1 then
+                    yoff-=1
+                end
+                if y1+y2 > 1 then
+                    yoff-=1
+                end
+
                 if x1+x2+y1+y2!=0 then
                     line(
                         boardx+(col+x1)*6+xoff+sxoff,
-                        boardy+(row+y1)*6,
+                        boardy+(row+y1)*6+yoff+syoff,
                         boardx+(col+x2)*6+xoff,
-                        boardy+(row+y2)*6,7)
+                        boardy+(row+y2)*6+yoff,7)
                 end
             end
         end
@@ -574,11 +586,17 @@ end
 function draw_board_blocks()
     for rowi=0,#board-1 do
         cleared = true
-        for coli=1,(#board[rowi+1]) do
+        for coli=1,boardsizex do
             block = board[rowi+1][coli]
             if not block.issolid then
                 cleared = false
+                
                 break
+            end
+        end
+        if cleared then
+            for coli2=1,boardsizex do
+                board[rowi+1][coli2].cleared = true
             end
         end
         if not cleared then
@@ -592,6 +610,7 @@ function draw_board_blocks()
                 end
             end
         else
+            
             lockedpiece_counter = lockedpiece_counter_max
         end
     end

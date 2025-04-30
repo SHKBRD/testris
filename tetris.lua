@@ -58,7 +58,7 @@ function tetris_init()
     clear_particles_addable = true
     clearparts={}
 
-    level = 0
+    level = 500
 
     boardsizex=10
     boardsizey=21
@@ -500,14 +500,14 @@ function attempt_rotate_tetrimino(dir, tetri)
         currpiece = check_tetrimino
         return true
     end
-    --don't check wallkicks on 
+    --don't check wallkicks on i piece
     if check_tetrimino.pieceid != 1 then
-        check_tetrimino.x -= 1
+        check_tetrimino.x += 1
         if not is_piece_colliding_grid(check_tetrimino) then
             currpiece = check_tetrimino
             return true
         end
-        check_tetrimino.x += 2
+        check_tetrimino.x -= 2
         if not is_piece_colliding_grid(check_tetrimino) then
             currpiece = check_tetrimino
             return true

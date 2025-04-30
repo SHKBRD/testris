@@ -58,7 +58,7 @@ function tetris_init()
     clear_particles_addable = true
     clearparts={}
 
-    level = 500
+    level = 0
 
     boardsizex=10
     boardsizey=21

@@ -149,6 +149,14 @@ function draw_nextpiece()
     --stop(color())
 end 
 
+function draw_ghostpiece()
+    ghostp=deepcopy(currpiece)
+    ghostp.color=6
+    attempt_fast_drop(ghostp)
+    draw_tetrimino(boardx+ghostp.x*6, boardy+ghostp.y*6, ghostp)
+    --stop(color())
+end 
+
 function draw_clear_parts()
     for part in all(clearparts) do
         circfill(boardx+part.x*6,boardy+part.y*6,part.timer,part.color)
@@ -160,6 +168,7 @@ function tetris_draw()
     draw_board_backing()
     draw_board_blocks()
     if currpiece then
+        draw_ghostpiece()
         draw_currpiece()
     end
     if lockedpiece != nil and lockedpiece_counter<lockedpiece_counter_max then

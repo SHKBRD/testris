@@ -1,4 +1,5 @@
 function tetris_init()
+    frames=0
     --prevents re-presses to let das not be buggy
     poke(0x5f5c,255)
     --prevent pal clearing
@@ -60,10 +61,11 @@ function tetris_init()
 
     level = 0
 
+    blocksize=2
     boardsizex=10
     boardsizey=21
     boardx=20
-    boardy=0
+    boardy=-2
     board={}
     fillboard()
 
@@ -71,6 +73,8 @@ function tetris_init()
 end
 
 function tetris_update60()
+    frames+=1
+    blocksize=4+sin(frames/60)
     accept_game_inputs()
     update_counters()
     if arecounter == 0 then

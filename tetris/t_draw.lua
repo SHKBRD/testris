@@ -1,13 +1,13 @@
 function draw_board_backing()
-    rect(boardx-2, boardy+4, boardx+boardsizex*6+1, boardy+boardsizey*6+1, 6)
-    rect(boardx-1, boardy+5, boardx+boardsizex*6, boardy+boardsizey*6, 7)
+    rect(boardx-2, boardy+4, boardx+boardsizex*blocksize+1, boardy+boardsizey*blocksize+1, 6)
+    rect(boardx-1, boardy+5, boardx+boardsizex*blocksize, boardy+boardsizey*blocksize, 7)
     fillp(0b1100011000111001)
-    rectfill(boardx, boardy+6, boardx+boardsizex*6-1, boardy+boardsizey*6-1, 1)
+    rectfill(boardx, boardy+6, boardx+boardsizex*blocksize-1, boardy+boardsizey*blocksize-1, 1)
     fillp()
 end
 
 function draw_board_block(x, y, block_type)
-    rectfill(x,y,x+5,y+5,block_type)
+    rectfill(x,y,x+blocksize-1,y+blocksize-1,block_type)
 end
 
 function draw_block_outline(row, col)
@@ -58,10 +58,10 @@ function draw_block_outline(row, col)
 
                 if x1+x2+y1+y2!=0 then
                     line(
-                        boardx+(col+x1)*6+xoff+sxoff,
-                        boardy+(row+y1)*6+yoff+syoff,
-                        boardx+(col+x2)*6+xoff,
-                        boardy+(row+y2)*6+yoff,7)
+                        boardx+(col+x1)*blocksize+xoff+sxoff,
+                        boardy+(row+y1)*blocksize+yoff+syoff,
+                        boardx+(col+x2)*blocksize+xoff,
+                        boardy+(row+y2)*blocksize+yoff,7)
                 end
             end
         end
@@ -91,7 +91,7 @@ function draw_board_blocks()
             for coli=0,(#board[rowi+1]-1) do
                 block = board[rowi+1][coli+1]
                 if block.issolid then
-                    draw_board_block(boardx+coli*6, boardy+rowi*6, findin(piececolors, block.color)+7)
+                    draw_board_block(boardx+coli*blocksize, boardy+rowi*blocksize, findin(piececolors, block.color)+7)
                     draw_block_outline(rowi, coli)
                     -- else
                 --     print(0, boardx+coli*6, boardy+rowi*6, 1)
@@ -110,8 +110,8 @@ end
 function draw_tetrimino(x, y, p)
     for rowi=1, #p.piecegrid do
         for coli=1, #p.piecegrid[rowi] do
-            bx=x+(coli-2)*6
-            by=y+(rowi-2)*6
+            bx=x+(coli-2)*blocksize
+            by=y+(rowi-2)*blocksize
             result=p.piecegrid[rowi][coli]
             if result != 0 then
                 if p.locking == true then
@@ -129,7 +129,7 @@ end
 function draw_currpiece()
     drawcurr = deepcopy(currpiece)
     drawcurr.color=15
-    draw_tetrimino(boardx+drawcurr.x*6, boardy+drawcurr.y*6,drawcurr)
+    draw_tetrimino(boardx+drawcurr.x*blocksize, boardy+drawcurr.y*blocksize,drawcurr)
 end 
 
 function draw_nextpiece()
@@ -153,18 +153,18 @@ function draw_ghostpiece()
     ghostp=deepcopy(currpiece)
     ghostp.color=6
     attempt_fast_drop(ghostp)
-    draw_tetrimino(boardx+ghostp.x*6, boardy+ghostp.y*6, ghostp)
+    draw_tetrimino(boardx+ghostp.x*blocksize, boardy+ghostp.y*blocksize, ghostp)
     --stop(color())
 end 
 
 function draw_clear_parts()
     for part in all(clearparts) do
-        circfill(boardx+part.x*6,boardy+part.y*6,part.timer,part.color)
+        circfill(boardx+part.x*blocksize,boardy+part.y*blocksize,part.timer,part.color)
     end
 end
 
 function tetris_draw()
-    cls()
+    cls(11)
     draw_board_backing()
     draw_board_blocks()
     if currpiece then
@@ -172,7 +172,7 @@ function tetris_draw()
         draw_currpiece()
     end
     if lockedpiece != nil and lockedpiece_counter<lockedpiece_counter_max then
-        draw_tetrimino(boardx+lockedpiece.x*6, boardy+lockedpiece.y*6,lockedpiece)
+        draw_tetrimino(boardx+lockedpiece.x*blocksize, boardy+lockedpiece.y*blocksize,lockedpiece)
     end
     
     draw_clear_parts()

@@ -28,3 +28,17 @@ function findin(table, item)
     end
     return -1
 end
+
+function clamp(min, max, val)
+    if min > val then return min end
+    if val > max then return max end
+    return val
+end
+
+function wrap_index(ind, table)
+    ind %= #table
+    if ind < 1 then
+        return #table-ind
+    end
+    return ind
+end

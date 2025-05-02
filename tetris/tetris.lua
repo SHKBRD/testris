@@ -61,7 +61,7 @@ function tetris_init()
 
     level = 0
 
-    blocksize=2
+    blocksize=6
     boardsizex=10
     boardsizey=21
     boardx=20
@@ -72,7 +72,7 @@ function tetris_init()
     das_frames = -1
 end
 
-function tetris_update60()
+function tetris_update()
     frames+=1
     blocksize=4+sin(frames/60)
     accept_game_inputs()

@@ -2,7 +2,12 @@ pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
 #include helper.lua
+#include draw_helper.lua
 #include main.lua
+#include menu/menu.lua
+#include menu/m_select.lua
+#include menu/m_draw.lua
+#include menu/menu.lua
 #include tetris/tetris.lua
 #include tetris/t_tables.lua
 #include tetris/t_update.lua
